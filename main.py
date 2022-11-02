@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 import time
 from http import HTTPStatus
@@ -7,8 +6,9 @@ from http import HTTPStatus
 import pandas as pd
 import pandas_ta as ta
 import requests
-from ccxt import binance, BaseError
-from dotenv import load_dotenv
+from ccxt import BaseError
+
+from settings import *
 
 from exceptions import APIResponseError
 from exceptions import APIStatusCodeError
@@ -16,32 +16,6 @@ from exceptions import DataError
 from exceptions import ExchangeError
 from exceptions import IndicatorDataError
 from exceptions import TelegramError
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # директория для файла логов
-
-# РАБОЧИЙ ОБЪЕМ ЗАЯВКИ
-ORDER = 0.001
-
-# НАСТРОЙКИ ИНДИКАТОРА RSI
-RSI = 14
-LOWER = 30
-UPPER = 100 - LOWER
-
-MARKET_ID = 'BTCUSDT'
-TIMEFRAME = '1h'  # m, h; d, w, M
-LIMIT = 250  # количество свечей
-RETRY_TIME = 10  # задержка в секундах
-
-load_dotenv()
-
-BINANCE_API_KEY = os.getenv('BINANCE_API_KEY')
-BINANCE_PRIVATE_KEY = os.getenv('BINANCE_PRIVATE_KEY')
-BINANCE_MARKET_TYPE = os.getenv('BINANCE_MARKET_TYPE')
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-TELEGRAM_ENDPOINT = 'https://api.telegram.org/bot{token}/sendMessage'
-
-MESSAGE = '{symbol}, amount: {amount}, entry price: {entry_price}, direction: {direction}'
 
 
 def check_tokens() -> bool:
@@ -197,17 +171,6 @@ def main():
         send_message(error_message)
         logging.critical(error_message)
         sys.exit(error_message)
-
-    exchange = binance({
-        'apiKey': BINANCE_API_KEY,
-        'secret': BINANCE_PRIVATE_KEY,
-        'timeout': 10000,  # number in milliseconds
-        'enableRateLimit': True,
-        'options': {
-            # 'spot', 'future', 'margin', 'delivery'
-            'defaultType': BINANCE_MARKET_TYPE,
-        }
-    })
 
     current_position = None
     prev_position = current_position

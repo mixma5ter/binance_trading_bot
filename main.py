@@ -2,11 +2,12 @@ import logging
 import sys
 import time
 from http import HTTPStatus
+from typing import Dict, List, Union
 
 import pandas as pd
 import pandas_ta as ta
 import requests
-from ccxt import BaseError
+from ccxt import Exchange, BaseError
 
 from exceptions import *
 from settings import *
@@ -23,7 +24,7 @@ def check_tokens() -> bool:
     ))
 
 
-def get_position(exchange):
+def get_position(exchange: Exchange) -> List[Dict[str, Union[int, float, str]]]:
     """Делает запрос к API биржы и возвращает информацию о позиции."""
     try:
         logging.info('Position request %s', MARKET_ID)
@@ -34,7 +35,9 @@ def get_position(exchange):
         return response
 
 
-def check_position_response(response):
+def check_position_response(
+        response: List[Dict[str, Union[int, float, str]]]
+) -> Dict[Union[float, str], Dict[str, Union[float, str]]]:
     """Проверяет наличие всех ключей в ответе API биржы."""
     logging.info('Checking the API Response')
 
@@ -78,7 +81,7 @@ def check_position_response(response):
     return positions
 
 
-def get_data(exchange):
+def get_data(exchange: Exchange) -> pd.DataFrame:
     """Делает запрос к API биржы и возвращает данные по инструменту."""
     try:
         logging.info('Request data for a %s', MARKET_ID)
@@ -95,7 +98,7 @@ def get_data(exchange):
         return data
 
 
-def indicators(df):
+def indicators(df: pd.DataFrame) -> pd.DataFrame:
     """Расчитывает значения индикаторов из данных биржи."""
     try:
         logging.info('Calculation of the value of indicators')
@@ -111,7 +114,7 @@ def indicators(df):
         return data
 
 
-def new_order(exchange, direction, amount):
+def new_order(exchange: Exchange, direction: str, amount: float) -> None:
     """Делает запрос к API биржы и выставляет рыночную заявку."""
     diff_amount = abs(float(amount)) + ORDER
     print(f'Submitting a market order: {direction}, размер заявки {diff_amount}')

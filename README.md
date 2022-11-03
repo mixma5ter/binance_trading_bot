@@ -1,4 +1,4 @@
-# Торговый робот для криптобиржи Binance
+# Торговый робот для криптобиржи [![Binance](https://img.shields.io/badge/Binance-FCD535?style=for-the-badge&logo=binance&logoColor=white)](https://www.binance.com)
 
 Робот основан на торговом индикаторе RSI. При выходе индикатора из области перепроданности, делает покупку. При выходе из области перекупленности, осуществляет продажу.
 

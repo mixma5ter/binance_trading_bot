@@ -8,14 +8,8 @@ import pandas_ta as ta
 import requests
 from ccxt import BaseError
 
+from exceptions import *
 from settings import *
-
-from exceptions import APIResponseError
-from exceptions import APIStatusCodeError
-from exceptions import DataError
-from exceptions import ExchangeError
-from exceptions import IndicatorDataError
-from exceptions import TelegramError
 
 
 def check_tokens() -> bool:

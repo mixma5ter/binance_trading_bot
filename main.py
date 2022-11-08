@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import time
 from http import HTTPStatus
@@ -7,10 +8,31 @@ from typing import Dict, List, Union
 import pandas as pd
 import pandas_ta as ta
 import requests
-from ccxt import Exchange, BaseError
+from ccxt import BaseError, Exchange
 
-from exceptions import *
-from settings import *
+from exceptions import (APIResponseError,
+                        APIStatusCodeError,
+                        DataError,
+                        ExchangeError,
+                        IndicatorDataError,
+                        TelegramError)
+from settings import (BASE_DIR,
+                      BINANCE_API_KEY,
+                      BINANCE_PRIVATE_KEY,
+                      BINANCE_MARKET_TYPE,
+                      DATA_MARKET_ID,
+                      DATA_TIMEFRAME,
+                      DATA_LIMIT,
+                      DATA_RETRY_TIME,
+                      EXCHANGE,
+                      ORDER_SIZE,
+                      RSI_PERIOD,
+                      RSI_LOWER,
+                      RSI_UPPER,
+                      TELEGRAM_CHAT_ID,
+                      TELEGRAM_ENDPOINT,
+                      TELEGRAM_TOKEN,
+                      TELEGRAM_MESSAGE)
 
 
 def check_tokens() -> bool:
@@ -27,8 +49,8 @@ def check_tokens() -> bool:
 def get_position(exchange: Exchange) -> List[Dict[str, Union[int, float, str]]]:
     """Делает запрос к API биржы и возвращает информацию о позиции."""
     try:
-        logging.info('Position request %s', MARKET_ID)
-        response = exchange.fapiPrivate_get_positionrisk(params={'symbol': MARKET_ID})
+        logging.info('Position request %s', DATA_MARKET_ID)
+        response = exchange.fapiPrivate_get_positionrisk(params={'symbol': DATA_MARKET_ID})
     except BaseError as exc:
         raise ExchangeError(f'Getting position error: {exc}') from exc
     else:
@@ -84,8 +106,8 @@ def check_position_response(
 def get_data(exchange: Exchange) -> pd.DataFrame:
     """Делает запрос к API биржы и возвращает данные по инструменту."""
     try:
-        logging.info('Request data for a %s', MARKET_ID)
-        response = exchange.fetch_ohlcv(MARKET_ID, timeframe=TIMEFRAME, limit=LIMIT)
+        logging.info('Request data for a %s', DATA_MARKET_ID)
+        response = exchange.fetch_ohlcv(DATA_MARKET_ID, timeframe=DATA_TIMEFRAME, limit=DATA_LIMIT)
     except BaseError as exc:
         raise ExchangeError(f'Getting position error: {exc}') from exc
     try:
@@ -107,7 +129,7 @@ def indicators(df: pd.DataFrame) -> pd.DataFrame:
         data['close'] = df['close'].round(2)
         data['high'] = df['high'].round(2)
         data['low'] = df['low'].round(2)
-        data['rsi'] = ta.rsi(df['close'], length=RSI).round(2)
+        data['rsi'] = ta.rsi(df['close'], length=RSI_PERIOD).round(2)
     except Exception as exc:
         raise IndicatorDataError(f'Indicator data conversion error: {exc}') from exc
     else:
@@ -116,13 +138,13 @@ def indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 def new_order(exchange: Exchange, direction: str, amount: float) -> None:
     """Делает запрос к API биржы и выставляет рыночную заявку."""
-    diff_amount = abs(float(amount)) + ORDER
+    diff_amount = abs(float(amount)) + ORDER_SIZE
     print(f'Submitting a market order: {direction}, размер заявки {diff_amount}')
 
     if direction == "BUY":
-        exchange.create_order(symbol=MARKET_ID, type='MARKET', side='BUY', amount=diff_amount)
+        exchange.create_order(symbol=DATA_MARKET_ID, type='MARKET', side='BUY', amount=diff_amount)
     if direction == "SELL":
-        exchange.create_order(symbol=MARKET_ID, type='MARKET', side='SELL', amount=diff_amount)
+        exchange.create_order(symbol=DATA_MARKET_ID, type='MARKET', side='SELL', amount=diff_amount)
 
     send_message(f'*** Submitting a market order: {direction}, size {diff_amount} ***')
 
@@ -174,19 +196,19 @@ def main():
 
     while True:
         try:
-            response = get_position(exchange)
-            position = check_position_response(response)[MARKET_ID]
+            response = get_position(EXCHANGE)
+            position = check_position_response(response)[DATA_MARKET_ID]
             pos = float(position['amount'])
 
-            current_position = MESSAGE.format(
-                symbol=MARKET_ID,
+            current_position = TELEGRAM_MESSAGE.format(
+                symbol=DATA_MARKET_ID,
                 amount=position['amount'],
                 entry_price=position['entry_price'],
                 direction=('LONG' if pos > 0 else 'SHORT')
             )
             if current_position == prev_position:
                 logging.debug(
-                    'No position updates for the %s', MARKET_ID
+                    'No position updates for the %s', DATA_MARKET_ID
                 )
 
         except Exception as exc:
@@ -202,22 +224,22 @@ def main():
             error_message = f'Program crash: {exc}'
             logging.exception(error_message)
 
-        data = get_data(exchange)
+        data = get_data(EXCHANGE)
         indicators_data = indicators(data)
 
         rsi = indicators_data['rsi'].iloc[-1]
         rsi_prev = indicators_data['rsi'].iloc[-2]
 
-        buy = (rsi > LOWER >= rsi_prev)
-        sell = (rsi < UPPER <= rsi_prev)
+        buy = (rsi > RSI_LOWER >= rsi_prev)
+        sell = (rsi < RSI_UPPER <= rsi_prev)
 
         if buy and pos <= 0:
-            new_order(exchange, 'BUY', pos)
+            new_order(EXCHANGE, 'BUY', pos)
 
         if sell and pos >= 0:
-            new_order(exchange, 'SELL', pos)
+            new_order(EXCHANGE, 'SELL', pos)
 
-        time.sleep(RETRY_TIME)
+        time.sleep(DATA_RETRY_TIME)
         os.system('cls||clear')
 
 

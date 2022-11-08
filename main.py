@@ -136,6 +136,20 @@ def indicators(df: pd.DataFrame) -> pd.DataFrame:
         return data
 
 
+def transaction_decision(indicators_data, position):
+    rsi = indicators_data['rsi'].iloc[-1]
+    rsi_prev = indicators_data['rsi'].iloc[-2]
+
+    buy = (rsi > RSI_LOWER >= rsi_prev)
+    sell = (rsi < RSI_UPPER <= rsi_prev)
+
+    if buy and position <= 0:
+        new_order(EXCHANGE, 'BUY', position)
+
+    if sell and position >= 0:
+        new_order(EXCHANGE, 'SELL', position)
+
+
 def new_order(exchange: Exchange, direction: str, amount: float) -> None:
     """Делает запрос к API биржы и выставляет рыночную заявку."""
     diff_amount = abs(float(amount)) + ORDER_SIZE
@@ -226,18 +240,7 @@ def main():
 
         data = get_data(EXCHANGE)
         indicators_data = indicators(data)
-
-        rsi = indicators_data['rsi'].iloc[-1]
-        rsi_prev = indicators_data['rsi'].iloc[-2]
-
-        buy = (rsi > RSI_LOWER >= rsi_prev)
-        sell = (rsi < RSI_UPPER <= rsi_prev)
-
-        if buy and pos <= 0:
-            new_order(EXCHANGE, 'BUY', pos)
-
-        if sell and pos >= 0:
-            new_order(EXCHANGE, 'SELL', pos)
+        transaction_decision(indicators_data, pos)
 
         time.sleep(DATA_RETRY_TIME)
         os.system('cls||clear')

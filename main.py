@@ -11,10 +11,11 @@ import requests
 
 from exceptions import (APIResponseError, APIStatusCodeError, DataError,
                         ExchangeError, IndicatorDataError, TelegramError)
-from exchange import (Binance, BINANCE_API_KEY, BINANCE_PRIVATE_KEY,
-                      BINANCE_MARKET_TYPE, DATA_MARKET_ID, DATA_TIMEFRAME,
-                      DATA_LIMIT, DATA_RETRY_TIME, ORDER_SIZE)
-from settings import (BASE_DIR, RSI_PERIOD, RSI_LOWER, RSI_UPPER,
+from exchange import (exchange, BINANCE_API_KEY, BINANCE_PRIVATE_KEY,
+                      BINANCE_MARKET_TYPE, )
+from settings import (BASE_DIR, DATA_MARKET_ID, DATA_TIMEFRAME,
+                      DATA_LIMIT, DATA_RETRY_TIME, ORDER_SIZE,
+                      RSI_PERIOD, RSI_LOWER, RSI_UPPER,
                       TELEGRAM_CHAT_ID, TELEGRAM_ENDPOINT, TELEGRAM_TOKEN,
                       TELEGRAM_MESSAGE)
 
@@ -30,12 +31,12 @@ def check_tokens() -> bool:
     ))
 
 
-def get_position(exchange: Binance) -> List[Dict[str, Union[int, float, str]]]:
+def get_position(exchange: exchange) -> List[Dict[str, Union[int, float, str]]]:
     """Делает запрос к API биржы и возвращает информацию о позиции."""
     try:
         logging.info('Position request %s', DATA_MARKET_ID)
         response = exchange.fapiPrivate_get_positionrisk(params={'symbol': DATA_MARKET_ID})
-    except Binance.error as exc:
+    except exchange.error as exc:
         raise ExchangeError(f'Getting position error: {exc}') from exc
     else:
         return response
@@ -87,12 +88,12 @@ def check_position_response(
     return positions
 
 
-def get_data(exchange: Binance) -> pd.DataFrame:
+def get_data(exchange: exchange) -> pd.DataFrame:
     """Делает запрос к API биржы и возвращает данные по инструменту."""
     try:
         logging.info('Request data for a %s', DATA_MARKET_ID)
         response = exchange.fetch_ohlcv(DATA_MARKET_ID, timeframe=DATA_TIMEFRAME, limit=DATA_LIMIT)
-    except Binance.error as exc:
+    except exchange.error as exc:
         raise ExchangeError(f'Getting position error: {exc}') from exc
     try:
         data = pd.DataFrame(response, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
@@ -128,13 +129,13 @@ def transaction_decision(indicators_data, position):
     sell = (rsi < RSI_UPPER <= rsi_prev)
 
     if buy and position <= 0:
-        new_order(Binance.run, 'BUY', position)
+        new_order(exchange, 'BUY', position)
 
     if sell and position >= 0:
-        new_order(Binance.run, 'SELL', position)
+        new_order(exchange, 'SELL', position)
 
 
-def new_order(exchange, direction: str, amount: float) -> None:
+def new_order(exchange: exchange, direction: str, amount: float) -> None:
     """Делает запрос к API биржы и выставляет рыночную заявку."""
     diff_amount = abs(float(amount)) + ORDER_SIZE
     print(f'Submitting a market order: {direction}, размер заявки {diff_amount}')
@@ -194,7 +195,7 @@ def main():
 
     while True:
         try:
-            response = get_position(Binance().run())
+            response = get_position(exchange)
             position = check_position_response(response)[DATA_MARKET_ID]
             pos = float(position['amount'])
 
@@ -222,7 +223,7 @@ def main():
             error_message = f'Program crash: {exc}'
             logging.exception(error_message)
 
-        data = get_data(Binance().run())
+        data = get_data(exchange)
         indicators_data = indicators(data)
         transaction_decision(indicators_data, pos)
 

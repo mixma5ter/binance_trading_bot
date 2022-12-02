@@ -1,15 +1,13 @@
 import requests
 
-from settings import TELEGRAM_CHAT_ID, TELEGRAM_ENDPOINT, TELEGRAM_TOKEN
-
 
 class Telegram:
     """Класс телеграм бота."""
 
-    def __init__(self):
-        self.chat_id = TELEGRAM_CHAT_ID
-        self.endpoint = TELEGRAM_ENDPOINT
-        self.token = TELEGRAM_TOKEN
+    def __init__(self, data):
+        self.chat_id = data.get('chat_id')
+        self.endpoint = data.get('endpoint')
+        self.token = data.get('token')
         self.message = ''
         self.data = {}
 

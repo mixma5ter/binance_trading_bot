@@ -1,20 +1,20 @@
+from abc import ABC
+
 from ccxt import BaseError, binance, phemex
 
-from settings import (BINANCE_API_KEY, BINANCE_PRIVATE_KEY, BINANCE_MARKET_TYPE,
-                      DATA_MARKET_ID, DATA_LIMIT, DATA_TIMEFRAME)
 
+class Exchange(ABC):
+    """Абстрактный класс биржи."""
 
-class Exchange:
-    """Основной класс биржи."""
-    def __init__(self):
-        self.api_key = None
-        self.private_key = None
-        self.market_type = None
-        self.market_id = DATA_MARKET_ID
-        self.timeframe = DATA_TIMEFRAME
-        self.limit = DATA_LIMIT
-        self.exchange_config = {}
-        self.exchange = binance(self.exchange_config)
+    def __init__(self, data):
+        self.api_key = data.get('api_key')
+        self.private_key = data.get('private_key')
+        self.market_type = data.get('market_type')
+        self.market_id = data.get('market_id')
+        self.timeframe = data.get('timeframe')
+        self.limit = data.get('limit')
+        self.exchange_config = None
+        self.exchange = None
         self.error = BaseError
 
     def check_tokens(self):
@@ -48,11 +48,8 @@ class Exchange:
 class Binance(Exchange):
     """Класс биржи Binance."""
 
-    def __init__(self):
-        super().__init__()
-        self.api_key = BINANCE_API_KEY
-        self.private_key = BINANCE_PRIVATE_KEY
-        self.market_type = BINANCE_MARKET_TYPE
+    def __init__(self, data):
+        super().__init__(data)
         self.exchange_config = {
             'apiKey': self.api_key,
             'secret': self.private_key,
@@ -66,10 +63,8 @@ class Binance(Exchange):
 class Phemex(Exchange):
     """Класс биржи Phemex."""
 
-    def __init__(self):
-        super().__init__()
-        self.api_key = 'PHEMEX_API_KEY'
-        self.private_key = 'PHEMEX_PRIVATE_KEY'
+    def __init__(self, data):
+        super().__init__(data)
         self.exchange_config = {
             'apiKey': self.api_key,
             'secret': self.private_key,

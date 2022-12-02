@@ -11,11 +11,28 @@ import pandas_ta as ta
 from exceptions import (APIResponseError, APIStatusCodeError, DataError,
                         ExchangeError, IndicatorDataError, TelegramError)
 from exchange import Binance, Exchange
-from settings import (BASE_DIR, DATA_MARKET_ID, DATA_RETRY_TIME, ORDER_SIZE,
-                      RSI_PERIOD, RSI_LOWER, RSI_UPPER, TELEGRAM_MESSAGE)
+from settings import (BASE_DIR, BINANCE_API_KEY, BINANCE_PRIVATE_KEY, BINANCE_MARKET_TYPE,
+                      DATA_LIMIT, DATA_MARKET_ID, DATA_RETRY_TIME, DATA_TIMEFRAME, ORDER_SIZE,
+                      RSI_PERIOD, RSI_LOWER, RSI_UPPER, TELEGRAM_CHAT_ID, TELEGRAM_ENDPOINT,
+                      TELEGRAM_TOKEN, TELEGRAM_MESSAGE)
 from telegram import Telegram
 
-telegram = Telegram()
+telegram_config = {
+    'chat_id': TELEGRAM_CHAT_ID,
+    'endpoint': TELEGRAM_ENDPOINT,
+    'token': TELEGRAM_TOKEN,
+}
+telegram = Telegram(telegram_config)
+
+exchange_config = {
+    'api_key': BINANCE_API_KEY,
+    'private_key': BINANCE_PRIVATE_KEY,
+    'market_type': BINANCE_MARKET_TYPE,
+    'market_id': DATA_MARKET_ID,
+    'timeframe': DATA_TIMEFRAME,
+    'limit': DATA_LIMIT,
+}
+exchange = Binance(exchange_config)
 
 
 def check_position_response(
@@ -63,14 +80,14 @@ def check_position_response(
     return positions
 
 
-def rsi(data: List[List]) -> List[int]:
+def rsi(data: List[List], period) -> List[int]:
     """Расчитывает значения индикатора rsi из данных биржи."""
     try:
         logging.info('Calculation of the value of indicators')
         data = pd.DataFrame(data, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
         data = data.iloc[:-1, :]
         data['date'] = pd.to_datetime(data['date'], unit='ms')
-        data['rsi'] = ta.rsi(data['close'], length=RSI_PERIOD).round(2)
+        data['rsi'] = ta.rsi(data['close'], length=period).round(2)
         data = data.dropna()
         rsi_data_list = data['rsi'].tolist()
     except Exception as exc:
@@ -117,8 +134,6 @@ def send_message(message: str) -> None:
 
 
 def main():
-    exchange = Binance()
-
     if not telegram.check_tokens():
         error_message = (
             'Missing required environment variables: '
@@ -161,7 +176,7 @@ def main():
             )
             if current_position == prev_position:
                 logging.debug(
-                    'No position updates for the %s', DATA_MARKET_ID
+                    f'No position updates for the {DATA_MARKET_ID}'
                 )
         except Exception as exc:
             error_message = f'Program crash: {exc}'
@@ -182,7 +197,7 @@ def main():
         except exchange.error as exc:
             raise DataError(f'Getting data error: {exc}') from exc
 
-        indicator_data = rsi(data)
+        indicator_data = rsi(data, RSI_PERIOD)
         transaction_decision(exchange, indicator_data, pos)
 
         time.sleep(DATA_RETRY_TIME)

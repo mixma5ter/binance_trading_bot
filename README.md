@@ -1,5 +1,7 @@
 # Торговый робот для криптобиржи [![Binance](https://img.shields.io/badge/Binance-FCD535?style=for-the-badge&logo=binance&logoColor=white)](https://www.binance.com)
 
+[![Mixmaster](https://img.shields.io/badge/Developed%20by-mixmaster-blue?style=for-the-badge)](https://github.com/mixma5ter)
+
 Робот основан на торговом индикаторе RSI. При выходе индикатора из области перепроданности, делает покупку. При выходе из области перекупленности, осуществляет продажу.
 
 Все сделки проводятся по рыночной цене на указанный объём заявки.

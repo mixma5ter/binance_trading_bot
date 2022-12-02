@@ -10,6 +10,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # РАБОЧИЙ ОБЪЕМ ЗАЯВКИ
 ORDER_SIZE = 0.001
 
+# НАСТРОЙКИ БИРЖИ
+BINANCE_API_KEY = os.getenv('BINANCE_API_KEY')
+BINANCE_PRIVATE_KEY = os.getenv('BINANCE_PRIVATE_KEY')
+BINANCE_MARKET_TYPE = os.getenv('BINANCE_MARKET_TYPE')
+
 # НАСТРОЙКИ ТОРГОВОГО ИНСТРУМЕНТА
 DATA_MARKET_ID = 'BTCUSDT'
 DATA_TIMEFRAME = '1h'  # m, h; d, w, M

@@ -1,6 +1,20 @@
 from abc import ABC
+from typing import Dict, List
 
+import numpy as np
 from ccxt import BaseError, binance, phemex
+
+
+class DataTransferObject(Dict):
+    """Контейнер данных."""
+
+    date: List[str]
+    open: List[float]
+    high: List[float]
+    low: List[float]
+    close: List[float]
+    volume: List[float]
+    indicators: List[Dict[str, List[float]]]
 
 
 class Exchange(ABC):
@@ -39,7 +53,18 @@ class Exchange(ABC):
             timeframe=self.timeframe,
             limit=self.limit
         )
-        return response
+        data = np.array(response)
+        data = data.transpose()
+
+        return DataTransferObject(
+            date=data[0].astype(str),
+            open=data[1].astype(float),
+            high=data[2].astype(float),
+            low=data[3].astype(float),
+            close=data[4].astype(float),
+            volume=data[5].astype(float),
+            indicators=[],
+        )
 
     def create_market_order(self, side, amount):
         self.exchange.create_order(symbol=self.market_id, type='MARKET', side=side, amount=amount)

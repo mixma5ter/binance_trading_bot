@@ -10,7 +10,7 @@ import pandas_ta as ta
 
 from exceptions import (APIResponseError, APIStatusCodeError, DataError,
                         ExchangeError, IndicatorDataError, TelegramError)
-from exchange import Binance, Exchange
+from exchange import Binance, DataTransferObject, Exchange
 from settings import (BASE_DIR, BINANCE_API_KEY, BINANCE_PRIVATE_KEY, BINANCE_MARKET_TYPE,
                       DATA_LIMIT, DATA_MARKET_ID, DATA_RETRY_TIME, DATA_TIMEFRAME, ORDER_SIZE,
                       RSI_PERIOD, RSI_LOWER, RSI_UPPER, TELEGRAM_CHAT_ID, TELEGRAM_ENDPOINT,
@@ -80,26 +80,24 @@ def check_position_response(
     return positions
 
 
-def rsi(data: List[List], period) -> List[int]:
-    """Расчитывает значения индикатора rsi из данных биржи."""
+def rsi(data: DataTransferObject, period) -> DataTransferObject:
+    """Добавляет значения индикатора rsi в объект данных."""
     try:
         logging.info('Calculation of the value of indicators')
-        data = pd.DataFrame(data, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
-        data = data.iloc[:-1, :]
-        data['date'] = pd.to_datetime(data['date'], unit='ms')
-        data['rsi'] = ta.rsi(data['close'], length=period).round(2)
-        data = data.dropna()
-        rsi_data_list = data['rsi'].tolist()
+        df = pd.DataFrame(data['close'])
+        rsi = ta.rsi(df[0], length=period).round(2)
+        data['indicators'] = {'rsi': list(rsi)}
+
     except Exception as exc:
         raise IndicatorDataError(f'Indicator data conversion error: {exc}') from exc
     else:
-        return rsi_data_list
+        return data
 
 
-def transaction_decision(exchange: Exchange, indicators_data: List[int], position: float) -> None:
+def transaction_decision(exchange: Exchange, data: DataTransferObject, position: float) -> None:
     """Основная логика для выставления заявки."""
-    current_value = indicators_data[-1]
-    previous_value = indicators_data[-2]
+    current_value = data['indicators']['rsi'][-1]
+    previous_value = data['indicators']['rsi'][-2]
 
     buy = (current_value > RSI_LOWER >= previous_value)
     sell = (current_value < RSI_UPPER <= previous_value)

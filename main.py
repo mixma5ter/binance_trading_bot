@@ -132,19 +132,11 @@ def send_message(message: str) -> None:
 
 
 def main():
-    if not telegram.check_tokens():
+    if not (telegram.check_tokens() and exchange.check_tokens()):
         error_message = (
-            'Missing required environment variables: '
-            'TELEGRAM_CHAT_ID, TELEGRAM_ENDPOINT, TELEGRAM_TOKEN '
-            'The program was stopped'
-        )
-        logging.critical(error_message)
-        sys.exit(error_message)
-
-    if not exchange.check_tokens():
-        error_message = (
-            'Missing required environment variables: '
-            'BINANCE_API_KEY, BINANCE_PRIVATE_KEY, BINANCE_MARKET_TYPE '
+            'Missing required environment variables:\n'
+            'BINANCE_API_KEY, BINANCE_PRIVATE_KEY, BINANCE_MARKET_TYPE, '
+            'TELEGRAM_CHAT_ID, TELEGRAM_ENDPOINT, TELEGRAM_TOKEN.\n'
             'The program was stopped'
         )
         telegram.send_message(error_message)

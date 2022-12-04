@@ -15,9 +15,11 @@
 * Python 3.7
 * CCXT
 * Pandas
+* Numpy
 * Requests
 * Логирование
 * Телеграм-бот
+* ООП
 
 ## ВНИМАНИЕ! Это торговый робот! Вы запускаете его на свой страх и риск!
 
@@ -31,8 +33,8 @@ pip install -r requirements.txt
 BINANCE_API_KEY - API ключ биржи Binance [https://www.binance.com/ru/support/faq/360002502072]
 BINANCE_PRIVATE_KEY - Приватный ключ биржи Binance
 BINANCE_MARKET_TYPE - Тип торговый площадки (future или spot)
-TELEGRAM_TOKEN - Токен телеграмм
-TELEGRAM_CHAT_ID - ID телеграмм чата
+TELEGRAM_TOKEN - Токен телеграм
+TELEGRAM_CHAT_ID - ID телеграм чата
 ``` 
 - Запустите файл `main.py`
 
@@ -49,7 +51,3 @@ PERIOD - длина индикатора
 LOWER - граница перепроданности
 UPPER - граница перекупленности
 ```
-
-## Автор
-
-Евгений Спиридонов

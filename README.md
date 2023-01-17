@@ -1,53 +1,53 @@
-# Торговый робот для криптобиржи [![Binance](https://img.shields.io/badge/Binance-FCD535?style=for-the-badge&logo=binance&logoColor=white)](https://www.binance.com)
+# Trading bot for the cryptocurrency exchange [![Binance](https://img.shields.io/badge/Binance-FCD535?style=for-the-badge&logo=binance&logoColor=white)](https://www.binance.com)
 
 [![Mixmaster](https://img.shields.io/badge/Developed%20by-mixmaster-blue?style=for-the-badge)](https://github.com/mixma5ter)
 
-Робот основан на торговом индикаторе RSI. При выходе индикатора из области перепроданности, делает покупку. При выходе из области перекупленности, осуществляет продажу.
+This is an RSI-based bot. It gets a buy signal when the RSI goes out of the oversold region and a sell signal when the RSI goes out of the overbought region.
 
-Все сделки проводятся по рыночной цене на указанный объём заявки.
+All transactions are done at the market price with the size specified.
 
-При первом запуске робот присылает сообщение в телеграм с данными о позиции. Продолжает оповещать в автономном режиме о работе программы и смене позиции.
+When first launched the bot sends a message in Telegram with the information on the position. It keeps reporting on the program operation and position changes in standalone mode.
 
-В программе также реализовано сохранение логов в отдельный файл.
+The program also saves its logs in a separate file.
 
-## Технологии
+## Tech stack
 
 * Python 3.7
 * CCXT
 * Pandas
 * Numpy
 * Requests
-* Логирование
-* Телеграм-бот
-* ООП
+* Logging
+* Telegram-bot
+* OOP
 
-## ВНИМАНИЕ! Это торговый робот! Вы запускаете его на свой страх и риск!
+## WARNING! This is a trading bot! Use it at your own risk!
 
-- Установите и активируйте виртуальное окружение
-- Установите зависимости из файла requirements.txt
+- Create and activate your virtual environment
+- Install the dependencies from requirements.txt
 ```bash
 pip install -r requirements.txt
 ``` 
-- Настройте параметры подключения в файле `.env`
+- Set the connection parameters in the `.env` file
 ```
-BINANCE_API_KEY - API ключ биржи Binance [https://www.binance.com/ru/support/faq/360002502072]
-BINANCE_PRIVATE_KEY - Приватный ключ биржи Binance
-BINANCE_MARKET_TYPE - Тип торговый площадки (future или spot)
-TELEGRAM_TOKEN - Токен телеграм
-TELEGRAM_CHAT_ID - ID телеграм чата
+BINANCE_API_KEY - API key of the exchange [https://www.binance.com/ru/support/faq/360002502072]
+BINANCE_PRIVATE_KEY - Binance private key
+BINANCE_MARKET_TYPE - market type (future or spot)
+TELEGRAM_TOKEN - Telegram token
+TELEGRAM_CHAT_ID - Telegram chat ID
 ``` 
-- Запустите файл `main.py`
+- Run `main.py`
 
-## Настройки
+## Settings
 
-Настройки находятся в файле `settings.py`
+The settings are in `settings.py`
 ```
-ORDER - рабочий объем заявки
-MARKET_ID - торговый инструмент
-TIMEFRAME - рабочий таймфрейм
-LIMIT - количество свечей
-RETRY_TIME - задержка в секундах
-PERIOD - длина индикатора
-LOWER - граница перепроданности
-UPPER - граница перекупленности
+ORDER - operational size of the order
+MARKET_ID - trading tool
+TIMEFRAME - operational timeframe
+LIMIT - number of candles
+RETRY_TIME - delay time in seconds
+PERIOD - indicator’s length
+LOWER - oversold limit
+UPPER - overbought limit
 ```
